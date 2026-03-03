@@ -1,177 +1,203 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <title>WCP360 - Dashboard v1.1</title>
+    <title>WCP360 - Dashboard v2.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
 </head>
-<body class="bg-slate-900 text-white font-sans">
-    <nav class="p-6 border-b border-slate-800 flex justify-between items-center">
-        <h1 class="text-2xl font-bold text-blue-400">WCP360 <span class="text-sm font-light text-slate-500 italic">v1.1</span></h1>
-        <div class="flex gap-4 items-center">
-            <div class="text-right">
-                <p class="text-xs text-slate-400">CPU Usage</p>
-                <div class="w-24 bg-slate-700 h-2 rounded overflow-hidden">
-                    <div id="cpu-bar" class="bg-blue-500 h-full" style="width: 0%"></div>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white font-sans transition-colors duration-300">
+    <nav class="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 sticky top-0 z-50">
+        <div class="flex items-center gap-4">
+            <h1 class="text-2xl font-bold text-blue-600 dark:text-blue-400">WCP360</h1>
+            <button onclick="toggleTheme()" class="p-2 rounded-lg bg-slate-200 dark:bg-slate-800 hover:ring-2 ring-blue-500 transition">
+                <span id="theme-icon">🌙</span>
+            </button>
+        </div>
+        <div class="flex gap-6 items-center">
+            <div class="hidden md:block">
+                <p class="text-[10px] uppercase tracking-widest text-slate-400 mb-1">CPU Load</p>
+                <div class="w-32 bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                    <div id="cpu-bar" class="bg-blue-500 h-full transition-all duration-500" style="width: 0%"></div>
                 </div>
             </div>
-            <div class="text-right">
-                <p class="text-xs text-slate-400">RAM Usage</p>
-                <div class="w-24 bg-slate-700 h-2 rounded overflow-hidden">
-                    <div id="ram-bar" class="bg-purple-500 h-full" style="width: 0%"></div>
+            <div class="hidden md:block">
+                <p class="text-[10px] uppercase tracking-widest text-slate-400 mb-1">RAM Usage</p>
+                <div class="w-32 bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                    <div id="ram-bar" class="bg-purple-500 h-full transition-all duration-500" style="width: 0%"></div>
                 </div>
             </div>
         </div>
     </nav>
 
-    <main class="p-10 max-w-6xl mx-auto">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
-                <h3 class="text-slate-400 text-sm">Active Websites</h3>
+    <main class="p-6 md:p-10 max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+                <h3 class="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase">Sites Actifs</h3>
                 <p id="site-count" class="text-3xl font-bold mt-2">0</p>
             </div>
-            <div class="md:col-span-2 bg-slate-800 p-6 rounded-xl border border-slate-700 flex items-center gap-4">
-                <input id="domain" type="text" placeholder="Domain (ex: blog.com)" class="flex-1 bg-slate-900 border border-slate-600 p-3 rounded">
-                <input id="username" type="text" placeholder="User" class="w-32 bg-slate-900 border border-slate-600 p-3 rounded">
-                <button onclick="createAccount()" class="bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded font-bold transition">Deploy</button>
+            <div class="md:col-span-3 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-wrap items-center gap-4">
+                <input id="domain" type="text" placeholder="mon-site.fr" class="flex-1 min-w-[200px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3 rounded-xl focus:ring-2 ring-blue-500 outline-none">
+                <input id="username" type="text" placeholder="user" class="w-32 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3 rounded-xl focus:ring-2 ring-blue-500 outline-none">
+                <button onclick="createAccount()" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold transition-all transform active:scale-95 shadow-lg shadow-blue-500/20">Déployer</button>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
-            <div class="bg-slate-800 rounded-xl overflow-hidden border border-slate-700">
-                <div class="p-4 bg-slate-700 font-bold">Databases & Websites</div>
-                <table class="w-full text-left">
-                    <thead class="text-xs uppercase text-slate-400 border-b border-slate-700">
-                        <tr><th class="p-4">Domain</th><th class="p-4">User</th><th class="p-4">Quota</th><th class="p-4">Status</th><th class="p-4">Action</th></tr>
-                    </thead>
-                    <tbody id="tenant-list"></tbody>
-                </table>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div class="p-4 border-b border-slate-200 dark:border-slate-700 font-bold">Gestion des Hébergements</div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="text-[11px] uppercase text-slate-400 bg-slate-50/50 dark:bg-slate-700/30">
+                            <tr>
+                                <th class="p-4">Domaine</th>
+                                <th class="p-4">Utilisateur</th>
+                                <th class="p-4">Quota</th>
+                                <th class="p-4">Statut</th>
+                                <th class="p-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tenant-list" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
+                    </table>
+                </div>
             </div>
-            <div class="bg-black p-6 rounded-xl font-mono text-sm h-64 overflow-y-auto border border-slate-800 text-green-500" id="logs">
-                > System Monitor Online...
+            
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden flex flex-col h-[500px]">
+                <div class="p-3 bg-slate-800 flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span class="text-[10px] text-slate-400 ml-2 font-mono">system.log</span>
+                </div>
+                <div id="logs" class="p-4 font-mono text-xs text-green-400 overflow-y-auto flex-1 scrollbar-hide">
+                    > WCP360 Core initialized...
+                </div>
             </div>
         </div>
     </main>
 
-    <script>
-        async function updateStats() {
-            const res = await fetch('/api/system');
-            const data = await res.json();
-            document.getElementById('cpu-bar').style.width = data.cpu + '%';
-            document.getElementById('ram-bar').style.width = data.memory + '%';
+    <div id="file-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div class="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                <h3 class="text-lg font-bold">Explorateur : <span id="modal-user" class="text-blue-500"></span></h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-2xl">&times;</button>
+            </div>
+            <div id="file-content" class="p-6 max-h-[400px] overflow-y-auto space-y-2 font-mono text-sm text-slate-600 dark:text-slate-300"></div>
+        </div>
+    </div>
 
-            const resTenants = await fetch('/api/tenants');
-            const tenants = await resTenants.json();
-            document.getElementById('site-count').innerText = tenants.length;
-            
-            const list = document.getElementById('tenant-list');
-            list.innerHTML = tenants.map(t => `
-                <tr class="border-b border-slate-700/50 hover:bg-slate-700/30 transition">
-                    <td class="p-4">${t.domain}</td>
-                    <td class="p-4 text-slate-400">${t.username}</td><td class="p-4" id="quota-${t.username}">...</td>
-                    <td class="p-4"><span class="text-green-400 text-xs font-bold uppercase">Active</span></td><td class="p-4"><button onclick="viewFiles(\`${t.username}\`)" class="text-blue-400 hover:underline text-xs">Browse Files</button> | <button onclick="runBackup(\`${t.username}\`)" class="text-green-400 hover:underline text-xs">Backup</button></td>
-                </tr>
-            `).join('');
+    <script>
+        // Theme Management
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.innerText = '☀️';
+                localStorage.theme = 'light';
+            } else {
+                html.classList.add('dark');
+                icon.innerText = '🌙';
+                localStorage.theme = 'dark';
+            }
+        }
+
+        // Logic (System & Tenants)
+        async function updateStats() {
+            try {
+                const res = await fetch('/api/system');
+                const data = await res.json();
+                document.getElementById('cpu-bar').style.width = data.cpu + '%';
+                document.getElementById('ram-bar').style.width = data.memory + '%';
+
+                const resT = await fetch('/api/tenants');
+                const tenants = await resT.json();
+                document.getElementById('site-count').innerText = tenants.length;
+                
+                const list = document.getElementById('tenant-list');
+                list.innerHTML = tenants.map(t => `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/20 transition">
+                        <td class="p-4 font-medium">${t.domain}</td>
+                        <td class="p-4 text-slate-400 text-sm">${t.username}</td>
+                        <td class="p-4 text-xs font-mono" id="quota-${t.username}">...</td>
+                        <td class="p-4"><span class="px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-[10px] font-bold uppercase tracking-tighter">Active</span></td>
+                        <td class="p-4 text-right space-x-3">
+                            <button onclick="viewFiles('${t.username}')" class="text-blue-500 hover:text-blue-600 text-xs font-semibold">Fichiers</button>
+                            <button onclick="runBackup('${t.username}')" class="text-emerald-500 hover:text-emerald-600 text-xs font-semibold">Backup</button>
+                        </td>
+                    </tr>
+                `).join('');
+                
+                tenants.forEach(t => loadQuota(t.username, "quota-" + t.username));
+            } catch(e) {}
         }
 
         async function createAccount() {
             const domain = document.getElementById('domain').value;
             const username = document.getElementById('username').value;
+            if(!domain || !username) return;
+            
             const res = await fetch('/api/tenants', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({domain, username})
             });
             if(res.ok) {
-                document.getElementById('logs').innerHTML += '<br>> Infrastructure deployed for ' + domain;
-                updateStats(); fetchLogs();
-            tenants.forEach(t => loadQuota(t.username, "quota-" + t.username));
+                log('> Nouveau déploiement : ' + domain);
+                updateStats();
             }
         }
 
-        setInterval(updateStats, 3000);
-        updateStats(); fetchLogs();
-            tenants.forEach(t => loadQuota(t.username, "quota-" + t.username));
-    </script>
-</body>
-</html>
-<div id="file-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-10">
-    <div class="bg-slate-800 w-full max-w-2xl rounded-xl border border-slate-700 p-6">
-        <div class="flex justify-between mb-4">
-            <h3 class="text-xl font-bold">File Explorer: <span id="modal-user" class="text-blue-400"></span></h3>
-            <button onclick="closeModal()" class="text-slate-400 hover:text-white text-2xl">&times;</button>
-        </div>
-        <div id="file-content" class="space-y-2 font-mono text-sm"></div>
-    </div>
-</div>
-
-<script>
-    async function viewFiles(user) {
-        document.getElementById('modal-user').innerText = user;
-        document.getElementById('file-modal').classList.remove('hidden');
-        const res = await fetch('/api/files/' + user);
-        const files = await res.json();
-        
-        const content = document.getElementById('file-content');
-        if(files.error) {
-            content.innerHTML = '<p class="text-red-400">Directory not initialized yet.</p>';
-        } else {
+        async function viewFiles(user) {
+            document.getElementById('modal-user').innerText = user;
+            document.getElementById('file-modal').classList.remove('hidden');
+            const res = await fetch('/api/files/' + user);
+            const files = await res.json();
+            const content = document.getElementById('file-content');
             content.innerHTML = files.map(f => `
-                <div class="flex justify-between p-2 hover:bg-slate-700 rounded transition">
+                <div class="flex justify-between items-center p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
                     <span>${f.is_dir ? '📁' : '📄'} ${f.name}</span>
-                    <span class="text-slate-500">${(f.size / 1024).toFixed(2)} KB</span>
+                    <span class="text-xs text-slate-400">${(f.size / 1024).toFixed(1)} KB</span>
                 </div>
             `).join('');
         }
-    }
 
-    function closeModal() {
-        document.getElementById('file-modal').classList.add('hidden');
-    }
-</script>
-<script>
-    async function runBackup(user) {
-        document.getElementById('logs').innerHTML += '<br>> Starting backup for ' + user + '...';
-        const res = await fetch('/api/backup/' + user, { method: 'POST' });
-        const data = await res.json();
-        if(res.ok) {
-            document.getElementById('logs').innerHTML += '<br>> SUCCESS: ' + data.file;
-        } else {
-            document.getElementById('logs').innerHTML += '<br>> ERROR: ' + data.error;
+        async function runBackup(user) {
+            log('> Backup en cours pour ' + user + '...');
+            const res = await fetch('/api/backup/' + user, { method: 'POST' });
+            const data = await res.json();
+            if(res.ok) log('> Succès : ' + data.file.split('/').pop());
         }
-    }
-</script>
-<script>
-    async function fetchLogs() {
-        const res = await fetch('/api/logs');
-        const data = await res.json();
-        const logBox = document.getElementById('logs');
-        // Clean and update logs
-        if(data.logs) {
-            logBox.innerText = data.logs;
-            logBox.scrollTop = logBox.scrollHeight;
+
+        async function loadQuota(user, elId) {
+            const res = await fetch('/api/quota/' + user);
+            const data = await res.json();
+            const el = document.getElementById(elId);
+            if(el) el.innerText = data.size_mb.toFixed(2) + ' MB';
         }
-    }
-    // Refresh logs every 5 seconds
-    setInterval(fetchLogs, 5000);
-</script>
-<script>
-    async function changePHP(user, version) {
-        if(version === "PHP") return;
-        const res = await fetch('/api/php/set', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({user, version})
-        });
-        if(res.ok) {
-            document.getElementById('logs').innerHTML += '<br>> Switched ' + user + ' to PHP ' + version;
+
+        async function fetchLogs() {
+            const res = await fetch('/api/logs');
+            const data = await res.json();
+            if(data.logs) document.getElementById('logs').innerText = data.logs;
         }
-    }
-</script>
-<script>
-    async function loadQuota(user, elementId) {
-        const res = await fetch('/api/quota/' + user);
-        const data = await res.json();
-        document.getElementById(elementId).innerText = data.size_mb.toFixed(2) + ' MB';
-    }
-</script>
+
+        function log(msg) {
+            const l = document.getElementById('logs');
+            l.innerHTML += '<br>' + msg;
+            l.scrollTop = l.scrollHeight;
+        }
+
+        function closeModal() { document.getElementById('file-modal').classList.add('hidden'); }
+
+        // Initialisation
+        if (localStorage.theme === 'light') toggleTheme();
+        setInterval(updateStats, 5000);
+        setInterval(fetchLogs, 5000);
+        updateStats();
+        fetchLogs();
+    </script>
+</body>
+</html>
