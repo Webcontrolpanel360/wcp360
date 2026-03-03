@@ -9,18 +9,18 @@
 ## 🛠 Installation
 ```
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/wcp360.git
+git clone https://github.com/Webcontrolpanel360/wcp360.git
 
 # Enter the project directory
 cd wcp360
 
 # Run the deployment script (requires root privileges)
-sudo bash scripts/deploy.sh
+sudo bash scripts/install.sh
 ```
 
 ## 🔐 Security
 * **Admin** : admin
-* **Pass** : wcp360-secure
+* **Pass** : admin
 ---
 
 ## 🌍 Vision
