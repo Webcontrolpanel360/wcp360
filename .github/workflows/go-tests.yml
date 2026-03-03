@@ -1,0 +1,40 @@
+name: WCP360 CI/CD
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      # We add Redis because WCP360 uses it for the job engine
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+        cache: true
+
+    - name: Install dependencies
+      run: go mod download
+
+    - name: Verify code formatting
+      run: go fmt ./...
+
+    - name: Build WCP360 Binary
+      run: go build -v -o wcp360 ./cmd/wcp360/main.go
+
+    - name: Run Unit Tests
+      run: go test -v ./...

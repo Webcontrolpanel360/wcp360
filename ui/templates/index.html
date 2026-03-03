@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WCP360 - Dashboard v1.1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white font-sans">
+    <nav class="p-6 border-b border-slate-800 flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-blue-400">WCP360 <span class="text-sm font-light text-slate-500 italic">v1.1</span></h1>
+        <div class="flex gap-4 items-center">
+            <div class="text-right">
+                <p class="text-xs text-slate-400">CPU Usage</p>
+                <div class="w-24 bg-slate-700 h-2 rounded overflow-hidden">
+                    <div id="cpu-bar" class="bg-blue-500 h-full" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="text-right">
+                <p class="text-xs text-slate-400">RAM Usage</p>
+                <div class="w-24 bg-slate-700 h-2 rounded overflow-hidden">
+                    <div id="ram-bar" class="bg-purple-500 h-full" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="p-10 max-w-6xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
+                <h3 class="text-slate-400 text-sm">Active Websites</h3>
+                <p id="site-count" class="text-3xl font-bold mt-2">0</p>
+            </div>
+            <div class="md:col-span-2 bg-slate-800 p-6 rounded-xl border border-slate-700 flex items-center gap-4">
+                <input id="domain" type="text" placeholder="Domain (ex: blog.com)" class="flex-1 bg-slate-900 border border-slate-600 p-3 rounded">
+                <input id="username" type="text" placeholder="User" class="w-32 bg-slate-900 border border-slate-600 p-3 rounded">
+                <button onclick="createAccount()" class="bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded font-bold transition">Deploy</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            <div class="bg-slate-800 rounded-xl overflow-hidden border border-slate-700">
+                <div class="p-4 bg-slate-700 font-bold">Databases & Websites</div>
+                <table class="w-full text-left">
+                    <thead class="text-xs uppercase text-slate-400 border-b border-slate-700">
+                        <tr><th class="p-4">Domain</th><th class="p-4">User</th><th class="p-4">Quota</th><th class="p-4">Status</th><th class="p-4">Action</th></tr>
+                    </thead>
+                    <tbody id="tenant-list"></tbody>
+                </table>
+            </div>
+            <div class="bg-black p-6 rounded-xl font-mono text-sm h-64 overflow-y-auto border border-slate-800 text-green-500" id="logs">
+                > System Monitor Online...
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function updateStats() {
+            const res = await fetch('/api/system');
+            const data = await res.json();
+            document.getElementById('cpu-bar').style.width = data.cpu + '%';
+            document.getElementById('ram-bar').style.width = data.memory + '%';
+
+            const resTenants = await fetch('/api/tenants');
+            const tenants = await resTenants.json();
+            document.getElementById('site-count').innerText = tenants.length;
+            
+            const list = document.getElementById('tenant-list');
+            list.innerHTML = tenants.map(t => `
+                <tr class="border-b border-slate-700/50 hover:bg-slate-700/30 transition">
+                    <td class="p-4">${t.domain}</td>
+                    <td class="p-4 text-slate-400">${t.username}</td><td class="p-4" id="quota-${t.username}">...</td>
+                    <td class="p-4"><span class="text-green-400 text-xs font-bold uppercase">Active</span></td><td class="p-4"><button onclick="viewFiles(\`${t.username}\`)" class="text-blue-400 hover:underline text-xs">Browse Files</button> | <button onclick="runBackup(\`${t.username}\`)" class="text-green-400 hover:underline text-xs">Backup</button></td>
+                </tr>
+            `).join('');
+        }
+
+        async function createAccount() {
+            const domain = document.getElementById('domain').value;
+            const username = document.getElementById('username').value;
+            const res = await fetch('/api/tenants', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({domain, username})
+            });
+            if(res.ok) {
+                document.getElementById('logs').innerHTML += '<br>> Infrastructure deployed for ' + domain;
+                updateStats(); fetchLogs();
+            tenants.forEach(t => loadQuota(t.username, "quota-" + t.username));
+            }
+        }
+
+        setInterval(updateStats, 3000);
+        updateStats(); fetchLogs();
+            tenants.forEach(t => loadQuota(t.username, "quota-" + t.username));
+    </script>
+</body>
+</html>
+<div id="file-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-10">
+    <div class="bg-slate-800 w-full max-w-2xl rounded-xl border border-slate-700 p-6">
+        <div class="flex justify-between mb-4">
+            <h3 class="text-xl font-bold">File Explorer: <span id="modal-user" class="text-blue-400"></span></h3>
+            <button onclick="closeModal()" class="text-slate-400 hover:text-white text-2xl">&times;</button>
+        </div>
+        <div id="file-content" class="space-y-2 font-mono text-sm"></div>
+    </div>
+</div>
+
+<script>
+    async function viewFiles(user) {
+        document.getElementById('modal-user').innerText = user;
+        document.getElementById('file-modal').classList.remove('hidden');
+        const res = await fetch('/api/files/' + user);
+        const files = await res.json();
+        
+        const content = document.getElementById('file-content');
+        if(files.error) {
+            content.innerHTML = '<p class="text-red-400">Directory not initialized yet.</p>';
+        } else {
+            content.innerHTML = files.map(f => `
+                <div class="flex justify-between p-2 hover:bg-slate-700 rounded transition">
+                    <span>${f.is_dir ? '📁' : '📄'} ${f.name}</span>
+                    <span class="text-slate-500">${(f.size / 1024).toFixed(2)} KB</span>
+                </div>
+            `).join('');
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('file-modal').classList.add('hidden');
+    }
+</script>
+<script>
+    async function runBackup(user) {
+        document.getElementById('logs').innerHTML += '<br>> Starting backup for ' + user + '...';
+        const res = await fetch('/api/backup/' + user, { method: 'POST' });
+        const data = await res.json();
+        if(res.ok) {
+            document.getElementById('logs').innerHTML += '<br>> SUCCESS: ' + data.file;
+        } else {
+            document.getElementById('logs').innerHTML += '<br>> ERROR: ' + data.error;
+        }
+    }
+</script>
+<script>
+    async function fetchLogs() {
+        const res = await fetch('/api/logs');
+        const data = await res.json();
+        const logBox = document.getElementById('logs');
+        // Clean and update logs
+        if(data.logs) {
+            logBox.innerText = data.logs;
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+    }
+    // Refresh logs every 5 seconds
+    setInterval(fetchLogs, 5000);
+</script>
+<script>
+    async function changePHP(user, version) {
+        if(version === "PHP") return;
+        const res = await fetch('/api/php/set', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({user, version})
+        });
+        if(res.ok) {
+            document.getElementById('logs').innerHTML += '<br>> Switched ' + user + ' to PHP ' + version;
+        }
+    }
+</script>
+<script>
+    async function loadQuota(user, elementId) {
+        const res = await fetch('/api/quota/' + user);
+        const data = await res.json();
+        document.getElementById(elementId).innerText = data.size_mb.toFixed(2) + ' MB';
+    }
+</script>

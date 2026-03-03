@@ -1,0 +1,5 @@
+ {
+    root * ./data/www/admin
+    file_server
+    encode zstd gzip
+}

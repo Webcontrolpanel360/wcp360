@@ -1,0 +1,13 @@
+[Unit]
+Description=WCP360 Control Panel
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/www/wcp360
+ExecStart=/var/www/wcp360/wcp360
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,7 @@
+# configs/dev.yaml
+# Main settings for WCP360 development mode.
+server:
+  port: 8080
+  version: "1.0.0-alpha"
+database:
+  path: "./wcp360.db"
