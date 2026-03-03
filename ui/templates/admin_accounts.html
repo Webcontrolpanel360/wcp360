@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>WCP360 - Administration des Comptes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-200">
+    <div class="flex h-screen">
+        <aside class="w-64 bg-slate-800 border-r border-slate-700 p-6">
+            <h2 class="text-2xl font-bold text-blue-500 mb-10">WCP360 PRO</h2>
+            <nav class="space-y-4">
+                <a href="/" class="block p-3 rounded hover:bg-slate-700">Tableau de bord</a>
+                <a href="/admin/accounts" class="block p-3 rounded bg-blue-600 text-white">Gestion des Comptes</a>
+                <a href="/admin/packages" class="block p-3 rounded hover:bg-slate-700">Offres d'Hébergement</a>
+                <a href="/admin/settings" class="block p-3 rounded hover:bg-slate-700">Configuration Serveur</a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 p-10 overflow-y-auto">
+            <div class="flex justify-between items-center mb-8">
+                <h1 class="text-3xl font-bold">Liste des Comptes Hébergés</h1>
+                <button onclick="showCreateModal()" class="bg-green-600 hover:bg-green-500 px-6 py-2 rounded-full font-bold transition">
+                    + Créer un Nouveau Compte
+                </button>
+            </div>
+
+            <div class="bg-slate-800 rounded-xl shadow-2xl border border-slate-700 overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-700/50 text-slate-400 text-sm uppercase">
+                            <th class="p-4">Domaine Principal</th>
+                            <th class="p-4">Utilisateur</th>
+                            <th class="p-4">Quota Disque</th>
+                            <th class="p-4">Status</th>
+                            <th class="p-4 text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="accounts-list">
+                        <tr class="border-b border-slate-700 hover:bg-slate-700/20 transition">
+                            <td class="p-4 font-semibold text-blue-400">mon-entreprise.com</td>
+                            <td class="p-4">client_01</td>
+                            <td class="p-4">
+                                <div class="w-24 bg-slate-900 rounded-full h-2">
+                                    <div class="bg-blue-500 h-2 rounded-full" style="width: 45%"></div>
+                                </div>
+                                <span class="text-xs text-slate-500">450MB / 1GB</span>
+                            </td>
+                            <td class="p-4"><span class="text-green-500">● Actif</span></td>
+                            <td class="p-4 text-center">
+                                <button class="text-xs bg-slate-600 px-3 py-1 rounded hover:bg-blue-500">Gérer</button>
+                                <button class="text-xs bg-red-900/30 text-red-500 px-3 py-1 rounded hover:bg-red-600 hover:text-white">Suspendre</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

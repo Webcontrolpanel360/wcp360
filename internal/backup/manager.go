@@ -1,5 +1,3 @@
-// internal/backup/manager.go
-// This module handles the creation of site backups.
 package backup
 
 import (
@@ -8,20 +6,20 @@ import (
     "time"
 )
 
-// CreateBackup creates a compressed archive of a tenant's web directory.
-func CreateBackup(username string) (string, error) {
-    timestamp := time.Now().Format("20060102-150405")
-    backupFile := fmt.Sprintf("./backups/%s-%s.tar.gz", username, timestamp)
-    sourceDir := fmt.Sprintf("./data/www/%s", username)
-
-    // Execute the Linux 'tar' command to compress the folder
-    cmd := exec.Command("tar", "-czf", backupFile, sourceDir)
-    err := cmd.Run()
+// CreateFullBackup compresse le dossier d'un utilisateur et exporte sa base SQL
+func CreateFullBackup(username, dbName string) (string, error) {
+    timestamp := time.Now().Format("2006-01-02_15-04")
+    backupPath := fmt.Sprintf("/home/%s/backups/backup_%s.tar.gz", username, timestamp)
     
-    if err != nil {
-        return "", fmt.Errorf("failed to create backup: %w", err)
-    }
+    // 1. Export MySQL (Dump)
+    // mysqldump -u root [DB_NAME] > /tmp/[DB_NAME].sql
+    sqlPath := fmt.Sprintf("/tmp/%s.sql", dbName)
+    exec.Command("mysqldump", dbName, "-r", sqlPath).Run()
 
-    fmt.Printf("[BACKUP] Created: %s\n", backupFile)
-    return backupFile, nil
+    // 2. Compression du dossier public_html + le dump SQL
+    // tar -czf [DEST] [SOURCE]
+    cmd := exec.Command("tar", "-czf", backupPath, "-C", "/home/"+username, "public_html", "-C", "/tmp", dbName+".sql")
+    
+    err := cmd.Run()
+    return backupPath, err
 }

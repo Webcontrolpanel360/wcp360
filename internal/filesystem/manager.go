@@ -11,6 +11,30 @@ type FileInfo struct {
     Size  int64  `json:"size"`
 }
 
+// ListFiles retourne la liste des fichiers et dossiers avec leurs détails
+type FileInfo struct {
+    Name string `json:"name"`
+    Size int64  `json:"size"`
+    IsDir bool  `json:"is_dir"`
+    Time string `json:"time"`
+}
+
+func ListFiles(path string) ([]FileInfo, error) {
+    entries, err := os.ReadDir(path)
+    if err != nil { return nil, err }
+
+    var files []FileInfo
+    for _, entry := range entries {
+        info, _ := entry.Info()
+        files = append(files, FileInfo{
+            Name:  entry.Name(),
+            Size:  info.Size(),
+            IsDir: entry.IsDir(),
+            Time:  info.ModTime().Format("2006-01-02 15:04"),
+        })
+    }
+    return files, nil
+}
 // ListFiles lists content of a tenant's web directory
 func ListFiles(username string) ([]FileInfo, error) {
     root := filepath.Join("./data/www", username)
