@@ -6,6 +6,21 @@
 
 **WCP360** is a modern, high-performance, security-first hosting control panel designed to replace legacy platforms like cPanel/WHM. Built with **Go**, it leverages a modular, kernel-native infrastructure layer for operators who demand speed, scalability, and zero legacy bloat.
 
+## 🛠 Installation
+```
+# Clone the repository
+git clone https://github.com/YOUR_USERNAME/wcp360.git
+
+# Enter the project directory
+cd wcp360
+
+# Run the deployment script (requires root privileges)
+sudo bash scripts/deploy.sh
+```
+
+## 🔐 Security
+* **Admin** : admin
+* **Pass** : wcp360-secure
 ---
 
 ## 🌍 Vision
