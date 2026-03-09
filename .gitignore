@@ -1,0 +1,121 @@
+#!/usr/bin/env bash
+# install.sh - Enhanced minimal WCP360 installer (dev/skeleton)
+set -euo pipefail
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Colors
+# ──────────────────────────────────────────────────────────────────────────────
+RED='\033[0;31m' GREEN='\033[0;32m' YELLOW='\033[1;33m' NC='\033[0m'
+log_info()  { echo -e "${GREEN}[INFO]${NC} $1"; }
+log_warn()  { echo -e "${YELLOW}[WARN]${NC} $1"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $1" >&2; exit 1; }
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Flags
+# ──────────────────────────────────────────────────────────────────────────────
+DEV_MODE=false
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --dev)      DEV_MODE=true; shift ;;
+        --help|-h)  echo "Usage: sudo ./install.sh [--dev]"; exit 0 ;;
+        *)          echo "Unknown option: $1"; exit 1 ;;
+    esac
+done
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Preflight
+# ──────────────────────────────────────────────────────────────────────────────
+[[ $EUID -eq 0 ]] || log_error "Must run as root (sudo)"
+command -v go >/dev/null || log_error "Go not found. Install Go >= 1.23"
+
+GO_VER=$(go version | cut -d' ' -f3 | sed 's/go//')
+[[ "$GO_VER" > "1.22" ]] || log_warn "Go $GO_VER detected — targeting 1.23+"
+
+grep -q cgroup2 /proc/filesystems && log_info "cgroups v2 enabled ✓" \
+    || log_warn "cgroups v2 not enabled (needed for isolation later)"
+
+command -v systemctl >/dev/null && log_info "systemd detected ✓" \
+    || log_warn "systemd not found — service management limited"
+
+log_info "Starting WCP360 minimal installation"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# User & directories
+# ──────────────────────────────────────────────────────────────────────────────
+id wcp360 &>/dev/null || {
+    log_info "Creating user/group wcp360"
+    useradd -r -s /usr/sbin/nologin -d /nonexistent -m -U wcp360
+}
+
+for d in bin etc lib log; do
+    mkdir -p "/opt/wcp360/$d" "/var/$d/wcp360" /srv/www
+done
+chown -R wcp360:wcp360 /opt/wcp360 /var/lib/wcp360 /var/log/wcp360 /srv/www
+chmod -R 750 /opt/wcp360 /var/lib/wcp360 /var/log/wcp360
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Build binary
+# ──────────────────────────────────────────────────────────────────────────────
+log_info "Building binary..."
+if $DEV_MODE && [[ -f cmd/wcp360/main.go && -f go.mod ]]; then
+    log_info "Dev mode: local build"
+    go build -o /opt/wcp360/bin/wcp360 ./cmd/wcp360 || log_error "Local build failed"
+else
+    TMP=$(mktemp -d)
+    git clone --depth 1 --branch feature/initial-go-skeleton-with-cobra \
+        https://github.com/Webcontrolpanel360/wcp360.git "$TMP"
+    (cd "$TMP" && go mod tidy && go build -o /opt/wcp360/bin/wcp360 ./cmd/wcp360) \
+        || log_error "Remote build failed"
+    rm -rf "$TMP"
+fi
+
+[[ -x /opt/wcp360/bin/wcp360 ]] || log_error "Binary missing"
+chown wcp360:wcp360 /opt/wcp360/bin/wcp360
+chmod 755 /opt/wcp360/bin/wcp360
+log_info "Binary ready at /opt/wcp360/bin/wcp360"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# systemd template (if systemd present)
+# ──────────────────────────────────────────────────────────────────────────────
+if command -v systemctl >/dev/null; then
+    cat > /etc/systemd/system/wcp360.service << 'EOFS'
+[Unit]
+Description=WCP360 Web Control Panel (skeleton)
+After=network.target
+
+[Service]
+User=wcp360
+Group=wcp360
+ExecStart=/opt/wcp360/bin/wcp360 serve
+Restart=always
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
+EOFS
+    chown root:root /etc/systemd/system/wcp360.service
+    chmod 644 /etc/systemd/system/wcp360.service
+    systemctl daemon-reload
+    log_info "systemd service template created → systemctl enable --now wcp360"
+fi
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Final message
+# ──────────────────────────────────────────────────────────────────────────────
+cat << 'EOM'
+
+WCP360 skeleton installed!
+
+Quick tests:
+  /opt/wcp360/bin/wcp360 --help
+  /opt/wcp360/bin/wcp360 version
+
+Next:
+  sudo systemctl enable --now wcp360     (if systemd)
+  /opt/wcp360/bin/wcp360 setup           (future)
+  sudo /opt/wcp360/bin/wcp360 admin create admin
+
+Docs: https://github.com/Webcontrolpanel360/wcp360
+EOM
+
+exit 0
